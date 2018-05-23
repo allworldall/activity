@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+		<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+				"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.linekong.report.reyun.dao.model.LogReportReyunFailDao">
+	<resultMap id="LogReportReyunFailVO" type="com.linekong.report.reyun.pojo.VO.LogReportReyunFailVO">
+		<result property="reportailId" 			column="report_fail_id"			/>
+		<result property="reportMark" 			column="report_mark"				/>
+		<result property="reportFailReason" 	column="report_fail_reason"		/>
+		<result property="reportFailType" 		column="report_fail_type"		/>
+		<result property="reportFailParam" 		column="report_fail_param"		/>
+		<result property="reportFailResult" 	column="report_fail_result"		/>
+		<result property="reportFailCount" 		column="report_fail_count"		/>
+		<result property="reportFailDate" 		column="report_fail_date"		/>
+		<result property="requestIp" 			column="request_ip"				/>
+		<result property="gameId" 				column="game_id"					/>
+	</resultMap>
+
+	<!-- 插入信息  -->
+	<insert id="insertLogReportReyunFail" parameterType="com.linekong.report.reyun.pojo.VO.LogReportReyunFailVO">
+		insert into LOG_REPORT_REYUN_FAIL (report_fail_id,report_mark,report_fail_reason,report_fail_type,report_fail_param,report_fail_result,report_fail_count,report_fail_date,request_ip,game_id)
+		values(LOG_REPORT_REYUN_FAIL_SEQ.nextval,#{reportMark},#{reportFailReason},#{reportFailType},#{reportFailParam},#{reportFailResult},#{reportFailCount},sysdate,#{requestIp},#{gameId})
+	</insert>
+	<!-- 更新发送次数 -->
+	<update id="updateLogReportReyunFail" parameterType="com.linekong.report.reyun.pojo.VO.LogReportReyunFailVO">
+		update LOG_REPORT_REYUN_FAIL
+		set report_fail_count = report_fail_count + 1,report_fail_result=#{reportFailResult},report_fail_reason = #{reportFailReason},request_ip=#{requestIp}
+		where report_mark = #{reportMark} and report_fail_type =#{reportFailType}
+	</update>
+	<!-- 删除发送失败记录 -->
+	<delete id="deleteLogReportReyunFail" parameterType="String">
+		delete LOG_REPORT_REYUN_FAIL
+		where report_mark = #{reportMark} and report_fail_type =#{reportFailType}
+	</delete>
+	<!-- 查询失败订单Count -->
+	<select id="selectCountFailInfo" parameterType="String" resultType="Integer">
+		select count(1)
+		from LOG_REPORT_REYUN_FAIL
+		where report_mark = #{reportMark} and report_fail_type =#{reportFailType}
+	</select>
+	<!-- 查询通知次数小于3次的信息  -->
+	<select id="selectReportFailInfo" resultMap="LogReportReyunFailVO" resultType="List">
+		select report_fail_id,report_mark,report_fail_reason,report_fail_type,report_fail_param,report_fail_result,report_fail_count,report_fail_date,request_ip,game_id
+		from LOG_REPORT_REYUN_FAIL
+		where report_fail_count &lt;= 3
+	</select>
+</mapper>

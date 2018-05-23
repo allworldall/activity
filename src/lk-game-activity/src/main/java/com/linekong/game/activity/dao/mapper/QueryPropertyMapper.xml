@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.linekong.game.activity.dao.model.QueryPropertyDao">
+
+    <!-- 查询短信验证码服务商的url -->
+    <select id="getConfigValue" resultType="String">
+        SELECT property_value FROM sys_config_info
+        WHERE  property_key = #{configKey} AND status = 1
+    </select>
+
+    <!--  -->
+    <select id="getItemInfo" resultType="com.linekong.game.activity.pojo.PO.ItemInfoPO">
+        SELECT sii.activity_id AS activityId, sii.item_code AS itemCode, sii.item_num AS itemNum
+          FROM sys_config_info sci INNER JOIN sys_item_info sii ON sci.property_value = sii.activity_id
+          WHERE sci.property_key = #{key} AND sci.status = 1 AND sii.status = 1
+    </select>
+
+</mapper>

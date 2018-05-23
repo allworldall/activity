@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.linekong.game.activity.dao.model.BindActivityDao">
+
+    <!-- 查询用户是否绑定 -->
+    <select id="countBind" resultType="Integer">
+        SELECT count(*) FROM sys_bind_info sbi LEFT JOIN  sys_phone_info spi
+        ON sbi.phone_id = spi.phone_id
+        WHERE sbi.app_id = #{appId} AND spi.phone_num = #{phoneNum}
+    </select>
+
+    <!-- 保存到记录验证码的日志表里  -->
+    <insert id="insertLogTable">
+        INSERT INTO log_validate_code (phone_num, validate_code)
+         VALUES (#{phoneNum}, #{phoneCode})
+    </insert>
+
+    <!-- 保存到验证码信息表里（有验证码状态字段） -->
+    <insert id="insertPhoneCode">
+        INSERT INTO sys_validate_code (phone_num, validate_code)
+         VALUES (#{phoneNum}, #{phoneCode})
+    </insert>
+
+    <!-- 查询库里是否有匹配的验证码 -->
+    <select id="countMatchCode" resultType="Integer">
+        <![CDATA[ SELECT count(*) FROM sys_validate_code
+                  WHERE phone_num = #{phoneNum} AND validate_code = #{phoneCode} AND status = 0
+                  AND send_time >= DATE_SUB(now(), INTERVAL 60 second) ]]>
+    </select>
+
+    <!-- 获取sys_phone_info表的该条记录的主键 -->
+    <select id="getPhoneInfo" resultType="com.linekong.game.activity.pojo.PO.PhoneInfoPO">
+      SELECT phone_id AS phoneId, phone_num AS phoneNum FROM sys_phone_info
+       WHERE phone_num = #{phoneNum}
+    </select>
+
+
+    <!-- 插入一条手机号记录 -->
+    <insert id="insertPhoneInfo" parameterType="com.linekong.game.activity.pojo.PO.PhoneInfoPO">
+        <selectKey resultType="Integer" order="AFTER" keyProperty="phoneId">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+        INSERT INTO sys_phone_info (phone_num)
+          VALUES (#{phoneNum})
+    </insert>
+
+
+    <!-- 查询该账号是否存在 -->
+    <select id="getAccountInfoPO" resultType="com.linekong.game.activity.pojo.PO.AccountInfoPO">
+        SELECT passport_id AS passportId
+         FROM sys_account
+         WHERE passport_name = #{account} AND game_id = #{gameId} AND passport_type = #{accountType}
+    </select>
+
+    <!-- 插入账号信息表 -->
+    <insert id="insertAccountInfo" parameterType="com.linekong.game.activity.pojo.PO.AccountInfoPO">
+        <selectKey resultType="Integer" order="AFTER" keyProperty="passportId">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+        INSERT INTO sys_account (passport_name, passport_type, role_id, game_id)
+          VALUES (#{account}, #{accountType}, #{roleId}, #{gameId})
+    </insert>
+
+
+    <!-- 插入账号和手机号绑定关联表 -->
+    <insert id="insertBindInfo">
+        INSERT INTO sys_bind_info (passport_id, phone_id, app_id)
+          VALUES (#{passportId}, #{phoneId}, #{appId})
+    </insert>
+
+    <!-- 更改验证码状态 -->
+    <delete id="deletePhoneCode">
+        DELETE FROM sys_validate_code
+          WHERE phone_num = #{phoneNum}
+    </delete>
+
+    <!-- 更新账号表的绑定状态 -->
+    <update id="updateBindStatus">
+        UPDATE sys_account SET bind_status = 1
+        WHERE passport_id = #{passportId}
+    </update>
+
+    <!-- 获取赠送活动实体类 -->
+    <select id="getGiveInfo" resultType="com.linekong.game.activity.pojo.PO.ActRewardInfoPO">
+        SELECT passport_name AS passportName, game_id AS gameId, gateway_id AS gatewayId, role_id AS roleId
+         FROM sys_invite_relation
+         WHERE phone_num = #{phoneNum} AND app_id = #{appId}
+    </select>
+
+    <!-- 发送奖励前先记录数据库,返回主键 -->
+    <insert id="insertSendItemLog">
+        <selectKey resultType="Integer" order="AFTER" keyProperty="logId">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+        INSERT INTO log_send_items (activity_id, passport_name, game_id, gateway_id, item_code, item_num, role_id, success_time)
+         VALUES (#{activityId}, #{passportName}, #{gameId}, #{gatewayId}, #{itemCode}, #{itemNum}, #{roleId}, now())
+    </insert>
+
+    <!-- 更改发送记录表的发送状态 -->
+    <update id="updateSendItemStatus">
+      UPDATE log_send_items SET result = #{invokeResult}
+       WHERE log_id = #{logId}
+    </update>
+
+    <!-- 将该用户的另一个账号也绑定手机号 -->
+    <insert id="insertBindInfoElse">
+        INSERT INTO sys_bind_info (passport_id, app_id, phone_id)
+
+          SELECT #{passportId}, #{appId} , phone_id FROM sys_phone_info WHERE phone_num = #{phoneNum}
+    </insert>
+</mapper>

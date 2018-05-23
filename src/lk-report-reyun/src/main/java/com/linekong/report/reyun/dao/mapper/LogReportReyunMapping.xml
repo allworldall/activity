@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+		<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+				"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.linekong.report.reyun.dao.model.LogReportReyunDao">
+	<!-- 插入信息  -->
+	<insert id="insertLogReportReyun" parameterType="com.linekong.report.reyun.pojo.VO.LogReportReyunVO">
+		insert into LOG_REPORT_REYUN (report_id	,report_mark    ,report_type,report_date,request_ip,game_id,report_state)
+				values(log_report_reyun_seq.nextval,#{reportMark}	,#{reportType}	,sysdate,#{requestIp},#{gameId},#{reportState})
+	</insert>
+
+	<!-- 根据唯一标识查询count  -->
+	<select id="selectCountLog" resultType="Integer" parameterType="String">
+		select count(1) from LOG_REPORT_REYUN where report_mark = #{reportMark} and report_type = #{reportType}
+	</select>
+
+	<!-- 根据唯一标识和状态查询count  -->
+	<select id="selectCountLogByState" resultType="Integer" parameterType="String">
+		select count(1) from LOG_REPORT_REYUN
+		where report_mark = #{reportMark} and report_type = #{reportType} and report_state = #{reportState}
+	</select>
+
+	<!-- 更新上报信息状态  -->
+	<update id="updateLogReportReyunState" parameterType="com.linekong.report.reyun.pojo.VO.LogReportReyunVO">
+		update LOG_REPORT_REYUN
+		set report_state = #{reportState}
+		where report_mark = #{reportMark} and report_type = #{reportType}
+	</update>
+</mapper>

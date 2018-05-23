@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.linekong.game.activity.dao.model.ScheduleTaskDao">
+
+    <!-- 查询发送物品失败的记录，且小于最大发送次数 -->
+    <select id="getSendFailInfo" resultType="com.linekong.game.activity.pojo.PO.ActivitySendItemInfoPO">
+        <![CDATA[
+        SELECT log_id AS logId, activity_id AS activityId, passport_name AS passportName,game_id AS gameId, gateway_id AS gatewayId,
+               item_code AS itemCode, item_num AS itemNum, role_id AS roleId
+         FROM log_send_items
+         WHERE result <> 1 AND send_count < #{maxCount} ]]>
+    </select>
+
+    <!-- 更新发送状态 -->
+    <update id="updateSendItemStatus">
+        UPDATE log_send_items SET result = #{invokeResult}, success_time = now(), send_count = send_count+1
+        WHERE log_id = #{logId}
+    </update>
+</mapper>

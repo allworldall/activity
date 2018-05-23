@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+		<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+				"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.linekong.report.reyun.dao.model.EratingDao">
+	<resultMap id="usmUserVO" type="com.linekong.report.reyun.pojo.VO.UmsUserVO">
+		<result property="userId" 	column="user_id"/>
+		<result property="userName" column="user_name"/>
+		<result property="adId" 		column="ad_id"/>
+	</resultMap>
+
+	<!-- 根据用户名查询广告Id  -->
+	<select id="getEquipmentIdByName" resultMap="usmUserVO" parameterType="String">
+		select user_id,user_name,ad_id from ${tableName} where user_name = #{userName}
+	</select>
+
+	<!-- 根据用户Id查询广告Id  -->
+	<select id="getEquipmentIdById" resultMap="usmUserVO" parameterType="String">
+		select user_id,user_name,ad_id from ${tableName} where user_id = #{userId}
+	</select>
+</mapper>

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+				        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.linekong.share.service.dao.model.QueryConfigInfoDao">
+    
+    <resultMap type="com.linekong.share.service.pojo.vo.ShareUserInfoDO" id="shareUserInfoResultMap">
+    		<id property="uniqulyId" column="uniquly_id"/>
+    		<result property="passportName" column="passport_name" />
+    		<result property="gameId" column="game_id" />
+    		<result property="gatewayId" column="gateway_id" />
+    		<result property="activityId" column="activity_id" />
+    		<result property="roleId" column="role_id"/>
+    </resultMap>
+    
+    <resultMap type="com.linekong.share.service.pojo.vo.ActivityItemInfoDO" id="itemInfoResultMap">
+    		<result property="itemCode" column="item_code"/>
+    		<result property="itemNum" column="item_num"/>
+    </resultMap>
+    
+    <select id="queryConfigInfo" parameterType="java.lang.String" resultType="java.lang.String">
+    		SELECT property_value FROM sys_config_condition 
+		 WHERE property_status = 1
+		   AND property_key= #{key};
+    </select>
+    <!-- 查询分享记录信息 -->
+    <select id="queryShareUserInfo" parameterType="java.lang.String" resultMap="shareUserInfoResultMap">
+    		SELECT
+		   uniquly_id,
+		   passport_name,
+		   game_id,
+		   gateway_id,
+		   activity_id,
+		   role_id
+		  FROM
+		    sys_share_user_info 
+		  WHERE uniquly_id = #{uniqulyId}
+    </select>
+    <!-- 查询分享信息是否已经满足点击条件 -->
+    <select id="queryShareClickCondition" parameterType="java.lang.String" resultType="int">
+    		SELECT COUNT(*) FROM sys_click_share_info WHERE uniquly_id = #{uniqulyId}
+    </select>
+    <!-- 通过活动ID查询活动物品信息 -->
+    <select id="queryActivityItemInfo" resultMap="itemInfoResultMap">
+    		SELECT item_code,item_num FROM sys_item_config WHERE item_status = 1 AND activity_id =#{activityId} ;
+    </select>
+
+	<!-- 查询该用户的累计奖励次数 -->
+	<select id="querySumCount" resultType="Integer">
+		SELECT COUNT(*) FROM log_send_items
+		  WHERE activity_id = #{actId} AND passport_name = #{passportName} AND game_id = #{gameId} AND gateway_id = #{gatewayId} AND result = 1
+	</select>
+
+	<!-- 查询该用户当日累计奖励次数 -->
+	<select id="queryDailyCount" resultType="Integer">
+		SELECT COUNT(*) FROM log_send_items
+		 WHERE activity_id = #{actId} AND passport_name = #{passportName} AND game_id = #{gameId} AND gateway_id = #{gatewayId} AND result = 1 AND to_days(success_time) = to_days(now())
+	</select>
+
+	<!-- 通过账号查询唯一标识 -->
+	<select id="queryUniqulyIdByAccount" resultType="String">
+		select uniquly_id FROM sys_share_user_info
+		 WHERE passport_name = #{passportName} AND game_id = #{gameId} AND gateway_id = #{gatewayId}
+	</select>
+</mapper>

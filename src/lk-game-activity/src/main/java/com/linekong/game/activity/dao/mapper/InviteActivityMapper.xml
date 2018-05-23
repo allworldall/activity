@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.linekong.game.activity.dao.model.InviteActivityDao">
+
+    <!--查询登录用户的手机号-->
+    <select id="getPhoneNum" resultType="String">
+        SELECT spi.phone_num from sys_account sa INNER JOIN sys_bind_info sbi ON sa.passport_id = sbi.passport_id
+                                                 INNER JOIN sys_phone_info spi ON sbi.phone_id = spi.phone_id
+        WHERE sa.passport_name = #{account} AND sa.game_id = #{gameId} AND sa.passport_type = #{accountType}
+    </select>
+
+    <!--记录登陆信息-->
+    <update id="recordLoginInfo">
+      INSERT INTO sys_login_info (app_id, game_id, passport_name, passport_type, role_id, login_time)
+        VALUES (#{appId}, #{gameId}, #{account}, #{accountType}, #{roleId}, now())
+        ON DUPLICATE KEY
+        UPDATE login_time = now()
+    </update>
+
+    <!-- 根据手机号查询角色和最近登录时间 -->
+    <select id="getBindedPhoneVO" resultType="com.linekong.game.activity.pojo.VO.BindedPhoneVO">
+        SELECT #{name} as name, #{phoneNum} AS bindedPhoneNum, sli.role_id AS roleId, sli.login_time AS loginTime
+         FROM  sys_account sc INNER JOIN sys_bind_info sbi ON sc.passport_id = sbi.passport_id
+                                INNER JOIN sys_phone_info spi ON sbi.phone_id= spi.phone_id
+                                 LEFT JOIN sys_login_info sli ON sli.game_id = sc.game_id AND sli.passport_name = sc.passport_name
+                                                              AND sli.passport_type = sc.passport_type
+                                 WHERE spi.phone_num = #{phoneNum} ORDER BY sli.`login_time` DESC LIMIT 0,1
+    </select>
+
+    <!-- 记录上报通讯录 -->
+    <insert id="recordReportData">
+      INSERT INTO log_report_phones (app_id, game_id, passport_name, phone_num, report_time)
+        VALUES 
+       <foreach collection="data" item="item" index="index"  separator=",">
+           (#{appId}, #{gameId}, #{account}, #{item.phoneNum}, now())
+       </foreach>
+    </insert>
+
+    <!-- 查询通讯录中有没有已绑定的手机号 -->
+    <select id="queryBindedPhone" resultType="String">
+      SELECT spi.phone_num
+       FROM sys_phone_info spi INNER JOIN sys_bind_info sbi
+       ON spi.phone_id = sbi.phone_id
+       WHERE sbi.app_id = #{appId} and spi.phone_num IN
+       <foreach collection="phoneNums" item="item" index="index" open="(" close=")" separator=",">
+           #{item}
+       </foreach>
+    </select>
+    
+    <!-- 查询邀请关系表有无数据 -->
+    <select id="countInvite" resultType="Integer">
+        SELECT count(*) FROM sys_invite_relation
+         WHERE app_id = #{appId} AND phone_num = #{invitedNum}
+    </select>
+    
+    <!-- 记录邀请关系 -->
+    <insert id="insertInviteRelation">
+        INSERT INTO sys_invite_relation (app_id, game_id, passport_name, gateway_id, role_id, phone_num, invite_time)
+        VALUES (#{appId}, #{gameId}, #{account}, #{gatewayId}, #{roleId}, #{invitedNum}, now())
+    </insert>
+
+    <!-- 查询当前用户邀请过的用户 -->
+    <select id="getSelfInvitePhones" resultType="String">
+        SELECT phone_num FROM sys_invite_relation
+         WHERE app_id = #{appId} AND game_id = #{gameId} AND role_id = #{roleId}
+    </select>
+
+</mapper>

@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+				        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.linekong.share.service.dao.model.ShareInfoRecordDao">
+
+	<insert id="insertShareUserInfo">
+		<selectKey keyProperty="count" resultType="int" order="BEFORE">
+			SELECT COUNT(1) FROM sys_share_user_info WHERE uniquly_id = #{uniqulyId} FOR UPDATE
+		</selectKey>
+		<!-- 插入数据 -->
+		<if test="count == 0">
+			INSERT INTO sys_share_user_info(uniquly_id,passport_name,game_id,gateway_id,activity_id,role_id)
+			VALUES(#{uniqulyId},
+			       #{passportName},
+			       #{gameId},
+			       #{gatewayId},
+			       #{activityId},
+			       #{roleId})
+		</if>
+		<!-- 不进行数据插入 -->
+		<if test="count == 1">
+			SELECT COUNT(1) FROM sys_share_user_info WHERE uniquly_id = #{uniqulyId} FOR UPDATE
+		</if>
+	</insert>
+	
+	<!--<insert id="insertClickShareInfo">
+		<selectKey keyProperty="count" resultType="int" order="BEFORE">
+			SELECT COUNT(*) FROM log_click_share_info
+             WHERE uniquly_id = #{uniqulyId}
+               AND click_ip_num = #{clickIpNum}
+               AND click_ua =  #{clickUa}
+		</selectKey>
+		<if test="count == 0">
+		  INSERT INTO log_click_share_info(uniquly_id,click_ip_num,click_ip,click_ua,click_url)
+              VALUES(#{uniqulyId},
+          		 #{clickIpNum},
+          		 #{clickIp},
+          		 #{clickUa},
+          		 #{clickUrl}
+          		 )
+		</if>
+		<if test="count ==1">
+			SELECT COUNT(*) FROM log_click_share_info
+             WHERE uniquly_id = #{uniqulyId}
+		</if>
+	</insert>-->
+	<insert id="insertClickShareInfo">
+			INSERT INTO log_click_share_info(uniquly_id,click_ip_num,click_ip,click_ua,click_url)
+			VALUES(#{uniqulyId},
+			#{clickIpNum},
+			#{clickIp},
+			#{clickUa},
+			#{clickUrl}
+			)
+	</insert>
+	
+	<insert id="insertMetConditionUser">
+		<selectKey keyProperty="logId" order="AFTER" resultType="int">
+  			SELECT LAST_INSERT_ID() as logId
+  		</selectKey>
+		INSERT INTO sys_click_share_info(uniquly_id,passport_name,activity_id,game_id,gateway_id,click_num,role_id)
+  			VALUES(#{uniqulyId},
+  				   #{passportName},
+  				   #{activityId},
+  				   #{gameId},
+  				   #{gatewayId},
+  				   #{clickNum},
+  				   #{roleId})
+	</insert>
+	
+	<!-- 记录赠送物品记录 -->
+	<insert id="insertSendItemLog">
+		INSERT INTO log_send_items(
+				  log_id,
+				  activity_id,
+				  passport_name,
+				  game_id,
+				  gateway_id,
+				  item_code,
+				  item_num,
+				  role_id
+				)
+				VALUES
+				  (
+				    #{logId},
+				    #{activityId},
+				    #{passportName},
+				    #{gameId},
+				    #{gatewayId},
+				    #{itemCode},
+				    #{itemNum},
+				    #{roleId}
+				  )
+	</insert>
+	<update id="updateSendItemStatus">
+		UPDATE log_send_items
+		   SET result = #{result},
+		       success_time = NOW()
+		WHERE log_id = #{logId}
+		  AND item_code = #{itemCode}
+	</update>
+</mapper>
